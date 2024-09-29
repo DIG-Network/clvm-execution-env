@@ -1,21 +1,21 @@
 import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import { exec } from 'child_process';
-import tmp from 'tmp';
-import fs from 'fs-extra';
-import path from 'path';
+import { promisify } from 'util';
 
 // Create an instance of Express
 const app = express();
 const port = 3000;
 
+// Promisify the exec function to use async/await
+const execPromise = promisify(exec);
+
 // Middleware to parse JSON body
 app.use(bodyParser.json());
 
 /**
- * POST /run-clvm
- * Accepts CLVM code and its parameters, executes it using chia dev tools,
- * and returns the result.
+ * POST /run-chialisp
+ * Accepts Chialisp code, runs it directly using `run` and `brun` in one line.
  *
  * Body:
  * {
@@ -23,49 +23,45 @@ app.use(bodyParser.json());
  *   "params": ["param1", "param2"]
  * }
  */
-
 // @ts-ignore
-app.post('/run-clvm', (req: Request, res: Response, next: NextFunction) => {
-    const { clvm_code, params }: { clvm_code: string; params?: string[] } = req.body;
+app.post('/run-chialisp', async (req: Request, res: Response, next: NextFunction) => {
+    let { clvm_code, params }: { clvm_code: string; params?: string[] } = req.body;
 
     if (!clvm_code) {
-        return res.status(400).json({ error: 'CLVM code is required' });
+        return res.status(400).json({ error: 'Chialisp code is required' });
     }
 
-    // Create a temporary directory with auto-cleanup after 5 minutes
-    const tempDir = tmp.dirSync({ prefix: 'clvm-', unsafeCleanup: true });
+    // Unescape internal quotes in the Chialisp code
+    clvm_code = clvm_code.replace(/\\"/g, '"');
+
+    // Log the incoming Chialisp code
+    console.log(`Received Chialisp code: ${clvm_code}`);
 
     try {
-        // Path to the temporary CLVM file
-        const clvmFilePath = path.join(tempDir.name, 'temp.clvm');
-        const clvmArgs = params ? params.join(' ') : '';
+        // Construct the one-liner command using `run` and `brun`
+        const clvmArgs = params ? `(${params.join(' ')})` : 'nil'; // Wrap params in parentheses
+        const command = `brun "$(run "${clvm_code}")" "${clvmArgs}"`;
 
-        // Write the CLVM code to the temporary file
-        fs.writeFileSync(clvmFilePath, clvm_code);
+        console.log(`Executing command: ${command}`);
 
-        // Command to run CLVM using chia dev tools
-        const command = `run -i ${clvmFilePath} ${clvmArgs}`;
+        // Execute the one-liner `brun "$(run ...)"` command
+        const { stdout, stderr } = await execPromise(command);
 
-        // Execute the CLVM command using child_process
-        exec(command, { cwd: '/chia-dev-tools/venv/bin' }, (error, stdout, stderr) => {
-            // Cleanup the temporary directory
-            tempDir.removeCallback();
+        if (stderr) {
+            console.error(`CLVM execution errors: ${stderr}`);
+        }
 
-            if (error) {
-                console.error(`Error executing CLVM: ${error.message}`);
-                return res.status(500).json({ error: 'Error running CLVM' });
-            }
+        // Trim the output of CLVM execution to remove any trailing newlines or spaces
+        const trimmedResult = stdout.trim();
 
-            if (stderr) {
-                console.error(`stderr: ${stderr}`);
-            }
+        // Log the result
+        console.log(`CLVM execution result: ${trimmedResult}`);
 
-            // Send back the result of the CLVM execution
-            return res.json({ result: stdout });
-        });
+        // Send back the result of the CLVM execution
+        return res.json({ result: trimmedResult });
+
     } catch (err) {
         console.error(`An error occurred: ${err}`);
-        tempDir.removeCallback(); // Ensure cleanup on error
         return res.status(500).json({ error: 'An internal server error occurred' });
     }
 });
