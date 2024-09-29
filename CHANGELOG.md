@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.4](https://github.com/DIG-Network/clvm-execution-env/compare/v0.0.1-alpha.3...v0.0.1-alpha.4) (2024-09-29)
+
+
+### Bug Fixes
+
+* ports ([5f3be33](https://github.com/DIG-Network/clvm-execution-env/commit/5f3be33690a26fb512e751f42cd60facf400cf4e))
+
 ### [0.0.1-alpha.3](https://github.com/DIG-Network/clvm-execution-env/compare/v0.0.1-alpha.2...v0.0.1-alpha.3) (2024-09-29)
 
 
