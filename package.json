@@ -1,13 +1,14 @@
 {
   "name": "clvm-execution-env",
-  "version": "1.0.0",
+  "version": "0.0.1-alpha.1",
   "description": "CLVM Execution Env for DIG Network",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
     "dev": "tsc --watch & nodemon dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare-release": "bash ./scripts/release.sh"
   },
   "author": "Michael Taylor",
   "license": "ISC",
