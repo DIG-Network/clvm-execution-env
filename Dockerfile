@@ -26,31 +26,27 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # Verify Node.js and npm installation
 RUN node -v && npm -v
 
-# Install Chia dev tools
-RUN git clone https://github.com/Chia-Network/chia-dev-tools.git /chia-dev-tools && \
-    cd /chia-dev-tools && \
-    python3 -m venv venv && \
-    . ./venv/bin/activate && \
-    pip install --upgrade pip && \
-    pip install .
+# Install Chia Dev Tools from PyPI globally so 'run' and 'brun' are available system-wide
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install --extra-index-url https://pypi.chia.net/simple/ chia-dev-tools
 
 # Set working directory to /usr/src/app for the Express app
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json first to leverage Docker caching
+# Copy package.json and package-lock.json for dependency installation
 COPY package*.json ./
 
 # Install npm dependencies for the Express server
 RUN npm install
 
-# Copy the rest of the application (TypeScript files, config, etc.)
+# Copy the rest of the application files
 COPY . .
 
 # Build the TypeScript project
 RUN npm run build
 
-# Expose the necessary ports for Chia and the Express server
-EXPOSE 8444 8555 3000
+# Expose the necessary ports for the CLVM server
+EXPOSE 4363
 
-# Set the command to start the Express server
+# Command to start the Express server
 CMD ["npm", "start"]
