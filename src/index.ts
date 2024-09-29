@@ -25,22 +25,22 @@ app.use(bodyParser.json());
  */
 // @ts-ignore
 app.post('/run-chialisp', async (req: Request, res: Response, next: NextFunction) => {
-    let { clvm_code, params }: { clvm_code: string; params?: string[] } = req.body;
+    let { clsp, params }: { clsp: string; params?: string[] } = req.body;
 
-    if (!clvm_code) {
+    if (!clsp) {
         return res.status(400).json({ error: 'Chialisp code is required' });
     }
 
     // Unescape internal quotes in the Chialisp code
-    clvm_code = clvm_code.replace(/\\"/g, '"');
+    clsp = clsp.replace(/\\"/g, '"');
 
     // Log the incoming Chialisp code
-    console.log(`Received Chialisp code: ${clvm_code}`);
+    console.log(`Received Chialisp code: ${clsp}`);
 
     try {
         // Construct the one-liner command using `run` and `brun`
         const clvmArgs = params ? `(${params.join(' ')})` : 'nil'; // Wrap params in parentheses
-        const command = `brun "$(run "${clvm_code}")" "${clvmArgs}"`;
+        const command = `brun "$(run "${clsp}")" "${clvmArgs}"`;
 
         console.log(`Executing command: ${command}`);
 
