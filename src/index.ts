@@ -5,7 +5,7 @@ import { promisify } from 'util';
 
 // Create an instance of Express
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 4363;
 
 // Promisify the exec function to use async/await
 const execPromise = promisify(exec);

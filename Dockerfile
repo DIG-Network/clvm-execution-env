@@ -45,8 +45,8 @@ COPY . .
 # Build the TypeScript project
 RUN npm run build
 
-# Expose the necessary ports for Chia and the Express server
-EXPOSE 8444 8555 3000
+# Expose the necessary ports for the CLVM server
+EXPOSE 4363
 
 # Command to start the Express server
 CMD ["npm", "start"]
